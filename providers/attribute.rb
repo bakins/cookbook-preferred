@@ -19,7 +19,12 @@ action :define do
     parts, lastpart = parts[0..-2], parts[-1]
     parts.insert(0, new_resource.namespace) if !new_resource.namespace.nil?
 
-    obj = node
+    obj = if node[parts[0]]
+            node[parts[0]].to_hash
+          else
+            Hash.new
+          end
+    
     parts.each do |part|
       obj[part] = Hash.new if !obj.include?(part)
       obj = obj[part]
@@ -30,6 +35,7 @@ action :define do
     if !obj.include?(lastpart) || obj[lastpart] != value
       Chef::Log.info("preferred_attribute[#{new_resource.name}] => #{value.inspect}")
       obj[lastpart] = value
+      node.set[parts[0]] = obj[parts[0]]
       new_resource.updated_by_last_action(true)
     end
   end
