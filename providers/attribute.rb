@@ -19,8 +19,10 @@ action :define do
     parts, lastpart = parts[0..-2], parts[-1]
     parts.insert(0, new_resource.namespace) if !new_resource.namespace.nil?
 
-    obj = if node[parts[0]]
-            node[parts[0]].to_hash
+    top = parts.first
+    
+    obj = if node[top]
+            node[top].to_hash
           else
             Hash.new
           end
@@ -29,13 +31,13 @@ action :define do
       obj[part] = Hash.new if !obj.include?(part)
       obj = obj[part]
     end
-
+    
     # Finally, set the attribute to the desired
     # value, and mark the resource as changed
     if !obj.include?(lastpart) || obj[lastpart] != value
       Chef::Log.info("preferred_attribute[#{new_resource.name}] => #{value.inspect}")
       obj[lastpart] = value
-      node.set[parts[0]] = obj[parts[0]]
+      node.set[top] = obj
       new_resource.updated_by_last_action(true)
     end
   end
